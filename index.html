@@ -307,6 +307,7 @@
   .auth-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 4px 0 8px; }
   .auth-divider { font-size: 12.5px; color: var(--ink-soft); margin: 14px 0 10px; }
   .auth-note { font-size: 13px !important; background: var(--gold-soft); color: var(--ink) !important; border-radius: var(--radius-s); padding: 8px 10px; }
+  .auth-note-small { font-size: 12.5px !important; margin: 6px 0 0 !important; }
   .auth-link { border: none; background: none; color: var(--teal); font-size: 13px; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 4px; }
   .docs-info { background: var(--teal-soft); color: var(--ink); border-radius: var(--radius-m); padding: 12px 14px; font-size: 13.5px; margin-bottom: 14px; }
   .auth-user { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; }
@@ -497,9 +498,7 @@ import {
   getFirestore, doc, getDoc, setDoc, onSnapshot, collection, deleteDoc, getDocs
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  sendEmailVerification, sendPasswordResetEmail
+  getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
 // Firebase project config -- the apiKey here is NOT a secret (Firebase web apps are meant to ship
@@ -1417,12 +1416,8 @@ function fmtDate(ms) {
   return d.getDate() + "." + (d.getMonth()+1) + "." + d.getFullYear();
 }
 
-// Home-screen apps on iPhone can't complete Google's pop-up sign-in (iOS doesn't hand the result
-// back to the app), so email + password is offered too -- it runs entirely inside the app.
-const isIosStandalone = (window.navigator.standalone === true) ||
-  (/iphone|ipad|ipod/i.test(navigator.userAgent) && window.matchMedia("(display-mode: standalone)").matches);
-let docsInfo = "";
-
+// Accounts are created by the app owner in the Firebase console (email + password), so sign-in
+// works the same on iPhone, Android and computers, with no pop-ups and no dependence on emails.
 function authErrorText(e) {
   const map = {
     "auth/invalid-credential": "אימייל או סיסמה שגויים.",
@@ -1430,118 +1425,43 @@ function authErrorText(e) {
     "auth/user-not-found": "אימייל או סיסמה שגויים.",
     "auth/invalid-email": "כתובת המייל לא תקינה.",
     "auth/missing-password": "צריך להזין סיסמה.",
-    "auth/weak-password": "הסיסמה צריכה להכיל לפחות 6 תווים.",
-    "auth/email-already-in-use": "כבר קיים חשבון עם המייל הזה (למשל מהתחברות קודמת עם Google). לחצו על \"שכחתי סיסמה\" כדי לקבוע סיסמה, ואז התחברו.",
+    "auth/user-disabled": "החשבון הזה הושבת.",
     "auth/operation-not-allowed": "התחברות עם אימייל וסיסמה עדיין לא הופעלה ב-Firebase.",
     "auth/too-many-requests": "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.",
     "auth/network-request-failed": "אין חיבור לאינטרנט. בדקו את החיבור ונסו שוב.",
   };
-  return map[e && e.code] || ("הפעולה נכשלה (" + ((e && e.code) || "שגיאה") + "). נסו שוב.");
-}
-
-function needsEmailVerification(user) {
-  return !!user && !user.emailVerified &&
-    user.providerData.length > 0 && user.providerData.every(p => p.providerId === "password");
+  return map[e && e.code] || ("ההתחברות נכשלה (" + ((e && e.code) || "שגיאה") + "). נסו שוב.");
 }
 
 function renderDocsAuth() {
   const authEl = document.getElementById("docsAuth");
   const content = document.getElementById("docsContent");
-  const msgs = `${docsError ? `<div class="docs-error">${escapeHtml(docsError)}</div>` : ''}${docsInfo ? `<div class="docs-info">${escapeHtml(docsInfo)}</div>` : ''}`;
+  const msgs = docsError ? `<div class="docs-error">${escapeHtml(docsError)}</div>` : '';
 
   if (!currentUser) {
     content.style.display = "none";
     authEl.innerHTML = `
       <div class="auth-box">
-        <p>כדי לראות ולהעלות מסמכים צריך להתחבר עם החשבון של אחד מבני המשפחה.</p>
+        <p>כדי לראות ולהעלות מסמכים צריך להתחבר עם המייל והסיסמה שקיבלתם.</p>
         ${msgs}
-        ${isIosStandalone ? '' : `<button class="btn-primary" id="signInBtn">התחברות עם Google</button>
-        <div class="auth-divider">או עם אימייל וסיסמה</div>`}
-        ${isIosStandalone ? `<p class="auth-note">באייפון, מתוך האייקון במסך הבית, ההתחברות היא עם אימייל וסיסמה.</p>` : ''}
-        <input type="email" id="authEmail" class="auth-input" placeholder="כתובת מייל" autocomplete="email" dir="ltr">
-        <input type="password" id="authPassword" class="auth-input" placeholder="סיסמה (לפחות 6 תווים)" autocomplete="current-password" dir="ltr">
+        <input type="email" id="authEmail" class="auth-input" placeholder="כתובת מייל" autocomplete="username" dir="ltr">
+        <input type="password" id="authPassword" class="auth-input" placeholder="סיסמה" autocomplete="current-password" dir="ltr">
         <div class="auth-actions">
           <button class="btn-primary" id="emailSignInBtn">התחברות</button>
-          <button class="btn-quiet" id="emailSignUpBtn">יצירת חשבון</button>
         </div>
-        <button class="auth-link" id="resetPwBtn">שכחתי סיסמה / קביעת סיסמה</button>
+        <p class="auth-note-small">אין לכם חשבון או ששכחתם את הסיסמה? פנו למי שמנהל/ת את האפליקציה.</p>
       </div>`;
-
-    const gBtn = document.getElementById("signInBtn");
-    if (gBtn) gBtn.addEventListener("click", async () => {
-      docsError = ""; docsInfo = "";
-      try {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-      } catch (e) {
-        console.warn("google sign-in failed", e);
-        if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") {
-          docsError = authErrorText(e) + " אפשר גם להתחבר עם אימייל וסיסמה.";
-          renderDocsAuth();
-        }
-      }
-    });
-
-    const getCreds = () => ({
-      email: document.getElementById("authEmail").value.trim(),
-      password: document.getElementById("authPassword").value,
-    });
-    const run = async (fn) => {
-      docsError = ""; docsInfo = "";
-      try { await fn(); } catch (e) { console.warn("auth failed", e); docsError = authErrorText(e); }
-      renderDocsAuth();
+    const signIn = async () => {
+      docsError = "";
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      try { await signInWithEmailAndPassword(auth, email, password); }
+      catch (e) { console.warn("sign-in failed", e); docsError = authErrorText(e); renderDocsAuth(); }
     };
-    document.getElementById("emailSignInBtn").addEventListener("click", () => run(async () => {
-      const { email, password } = getCreds();
-      await signInWithEmailAndPassword(auth, email, password);
-    }));
-    document.getElementById("emailSignUpBtn").addEventListener("click", () => run(async () => {
-      const { email, password } = getCreds();
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(cred.user);
-    }));
-    document.getElementById("resetPwBtn").addEventListener("click", () => run(async () => {
-      const { email } = getCreds();
-      if (!email) { const e = new Error(); e.code = "auth/invalid-email"; throw e; }
-      await sendPasswordResetEmail(auth, email);
-      docsInfo = "אם קיים חשבון עם " + email + ", נשלח אליו מייל לקביעת סיסמה. בדקו גם בתיקיית הספאם.";
-    }));
+    document.getElementById("emailSignInBtn").addEventListener("click", signIn);
     ["authEmail", "authPassword"].forEach(id => document.getElementById(id).addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); document.getElementById("emailSignInBtn").click(); }
+      if (e.key === "Enter") { e.preventDefault(); signIn(); }
     }));
-    return;
-  }
-
-  if (needsEmailVerification(currentUser)) {
-    content.style.display = "none";
-    authEl.innerHTML = `
-      <div class="auth-box">
-        <p>שלחנו מייל אימות ל-<b dir="ltr">${escapeHtml(currentUser.email || "")}</b>.<br>
-        פתחו את המייל, לחצו על הקישור, ואז חזרו לכאן ולחצו "אימתתי".</p>
-        ${msgs}
-        <div class="auth-actions">
-          <button class="btn-primary" id="verifiedBtn">אימתתי</button>
-          <button class="btn-quiet" id="resendBtn">שליחה חוזרת</button>
-          <button class="btn-quiet" id="signOutBtn">התנתקות</button>
-        </div>
-      </div>`;
-    document.getElementById("verifiedBtn").addEventListener("click", async () => {
-      docsError = ""; docsInfo = "";
-      try {
-        await currentUser.reload();
-        await currentUser.getIdToken(true); // refresh so the security rules see the verified status
-        if (currentUser.emailVerified) { startFilesListener(currentUser); }
-        else { docsError = "המייל עדיין לא אומת. לחצו על הקישור במייל ונסו שוב."; }
-      } catch (e) { docsError = authErrorText(e); }
-      renderDocsAuth();
-      renderMembers();
-    });
-    document.getElementById("resendBtn").addEventListener("click", async () => {
-      docsError = ""; docsInfo = "";
-      try { await sendEmailVerification(currentUser); docsInfo = "נשלח מייל אימות חדש. בדקו גם בתיקיית הספאם."; }
-      catch (e) { docsError = authErrorText(e); }
-      renderDocsAuth();
-    });
-    document.getElementById("signOutBtn").addEventListener("click", () => signOut(auth));
     return;
   }
 
@@ -1756,7 +1676,7 @@ function initDocs() {
 
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
-    docsError = ""; docsInfo = "";
+    docsError = "";
     startFilesListener(user);
     renderDocsAuth();
     renderMembers();
@@ -1766,7 +1686,7 @@ function initDocs() {
 function startFilesListener(user) {
   if (filesUnsub) { filesUnsub(); filesUnsub = null; }
   filesMeta = [];
-  if (!user || needsEmailVerification(user)) return;
+  if (!user) return;
   filesUnsub = onSnapshot(filesColRef, (snap) => {
     docsError = "";
     filesMeta = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
