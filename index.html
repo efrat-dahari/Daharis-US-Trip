@@ -296,6 +296,39 @@
   .map-note { background: var(--gold-soft); border-radius: var(--radius-m); padding: 12px 14px; font-size: 13.5px; margin-bottom: 18px; display: flex; gap: 8px; }
 
   /* ---------- SAVE BAR ---------- */
+  /* ---------- FLIGHTS ---------- */
+  .flight-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+  .flight-chip { font-size: 12px; font-weight: 600; background: var(--teal-soft); color: var(--teal); padding: 2px 9px; border-radius: 20px; }
+
+  /* ---------- DOCUMENTS ---------- */
+  .auth-box { background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 18px 16px; text-align: center; margin-bottom: 16px; }
+  .auth-box p { margin: 0 0 12px; font-size: 14px; color: var(--ink-soft); }
+  .auth-user { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; }
+  .btn-primary { border: none; background: var(--rust); color: #fff; font-weight: 700; font-size: 14.5px; padding: 10px 20px; border-radius: 20px; cursor: pointer; }
+  .btn-quiet { border: 1px solid var(--border); background: var(--paper); color: var(--ink-soft); font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 20px; cursor: pointer; }
+  .member-card { background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 14px 16px; margin-bottom: 12px; }
+  .member-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .member-head .m-name { font-weight: 700; font-size: 16px; flex: 1 1 auto; }
+  .member-head input[type="text"] { flex: 1 1 auto; font-size: 15px; padding: 6px 10px; border-radius: var(--radius-s); border: 1px solid var(--border); background: var(--bg); color: var(--ink); }
+  .file-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); }
+  .file-row .f-icon { flex: 0 0 auto; font-size: 20px; }
+  .file-row .f-main { flex: 1 1 auto; min-width: 0; cursor: pointer; }
+  .file-row .f-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-row .f-meta { font-size: 11.5px; color: var(--ink-soft); }
+  .file-row .f-del { flex: 0 0 auto; border: none; background: transparent; color: var(--ink-soft); font-size: 18px; cursor: pointer; }
+  .file-row .f-del:hover { color: var(--danger); }
+  .upload-label { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; font-weight: 700; color: var(--teal); background: var(--teal-soft); padding: 7px 14px; border-radius: 20px; cursor: pointer; }
+  .upload-label input { display: none; }
+  .upload-status { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; min-height: 1em; }
+  .docs-error { background: var(--danger-soft); color: var(--ink); border-radius: var(--radius-m); padding: 12px 14px; font-size: 13.5px; margin-bottom: 14px; }
+
+  .viewer { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.92); display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+  .viewer[hidden] { display: none; }
+  .viewer-bar { display: flex; justify-content: space-between; padding: 10px 14px; }
+  .viewer-btn { background: rgba(255,255,255,0.15); color: #fff; border: none; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 20px; text-decoration: none; cursor: pointer; }
+  .viewer img { flex: 1 1 auto; min-height: 0; object-fit: contain; width: 100%; }
+
   .save-bar {
     position: sticky; bottom: 0; z-index: 30; background: var(--paper); border-top: 1px solid var(--border);
     padding: 10px 18px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -334,6 +367,7 @@
     <button class="tab-btn" data-panel="packing">ציוד</button>
     <button class="tab-btn" data-panel="expenses">הוצאות</button>
     <button class="tab-btn" data-panel="notes">הערות</button>
+    <button class="tab-btn" data-panel="docs">מסמכים 🔒</button>
   </div>
 </nav>
 
@@ -344,7 +378,12 @@
     <p class="section-hint">אפשר לערוך כל שדה — תאריכים, לילות, לינה — ולשמור למטה.</p>
     <div id="routeDetail"></div>
     <h2 class="section-title" style="margin-top:28px;">טיסות</h2>
+    <p class="section-hint">אפשר לערוך, למחוק ולהוסיף טיסות — כולל מספר טיסה ושעות.</p>
     <div id="flightsList"></div>
+    <div class="add-row">
+      <input type="text" id="flightAddInput" placeholder="מסלול טיסה חדשה, לדוגמה: דאלאס → ניו יורק">
+      <button id="flightAddBtn">הוסף טיסה</button>
+    </div>
   </section>
 
   <section class="panel" id="panel-days">
@@ -418,6 +457,27 @@
     <textarea class="big-notes" id="generalNotes" placeholder="לדוגמה: להביא מטען נייד, לבדוק ביטוח נסיעות, מספר טלפון של דוד יוסי בדאלאס..." style="width:100%;min-height:240px;font-size:15px;padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--paper);color:var(--ink);resize:vertical;line-height:1.6;"></textarea>
   </section>
 
+  <section class="panel" id="panel-docs">
+    <h2 class="section-title">מסמכים לפי בני משפחה</h2>
+    <p class="section-hint">כרטיסי טיסה, צילומי דרכון, ביטוח ועוד. האזור הזה מוגן — רק חשבונות Google של בני המשפחה יכולים לראות ולהעלות קבצים.</p>
+    <div id="docsAuth"></div>
+    <div id="docsContent" style="display:none;">
+      <div id="docsMembers"></div>
+      <div class="add-row">
+        <input type="text" id="memberAddInput" placeholder="הוסיפו בן משפחה...">
+        <button id="memberAddBtn">הוסף</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="viewer" id="imgViewer" hidden>
+    <div class="viewer-bar">
+      <a id="imgViewerDownload" class="viewer-btn" download>הורדה</a>
+      <button id="imgViewerClose" class="viewer-btn">סגירה ×</button>
+    </div>
+    <img id="imgViewerImg" alt="">
+  </div>
+
 </div>
 
 <div class="save-bar">
@@ -428,8 +488,11 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, onSnapshot
+  getFirestore, doc, getDoc, setDoc, onSnapshot, collection, deleteDoc, getDocs
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
 // Firebase project config -- the apiKey here is NOT a secret (Firebase web apps are meant to ship
 // this publicly); access is controlled by the Firestore Security Rules set in the console, not by
@@ -447,6 +510,8 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 const stateDocRef = doc(db, "tripState", "main");
+const auth = getAuth(fbApp);
+const filesColRef = collection(db, "memberFiles");
 
 /* =========================================================
    TEMPLATE DATA (defaults — user edits are layered on top via state)
@@ -458,11 +523,13 @@ const REGIONS = [
   { id:"dallas",  name:"דאלאס",        dates:"7.10–12.10", nights:5, lodging:"3008 Talisman Dr",             color:"var(--dallas)", soft:"var(--dallas-soft)" },
 ];
 
-const FLIGHTS = [
-  { date:"27.9",  route:"ת\"א → ניו יורק",              note:"בינלאומית" },
-  { date:"30.9",  route:"ניו יורק → אוסטין",             note:"פנימית" },
-  { date:"12.10", route:"דאלאס → בוסטון → ת\"א",         note:"פנימית + קונקשן בינלאומי (ללא לינה בבוסטון)" },
-];
+function defaultFlights() {
+  return [
+    { id:"fl0", date:"27.9",  route:"ת\"א → ניו יורק",      flightNo:"", time:"", note:"בינלאומית" },
+    { id:"fl1", date:"30.9",  route:"ניו יורק → אוסטין",     flightNo:"", time:"", note:"פנימית" },
+    { id:"fl2", date:"12.10", route:"דאלאס → בוסטון → ת\"א", flightNo:"", time:"", note:"פנימית + קונקשן בינלאומי (ללא לינה בבוסטון)" },
+  ];
+}
 
 const DAYS = [
   { date:"27.9", wd:"א'", region:"ny", lodging:"515 9th Ave, Hudson Yards", shabbat:false,
@@ -626,6 +693,8 @@ let state = {
   packing: defaultPacking(),
   expenses: [],
   numPeople: 6,
+  flights: defaultFlights(),
+  members: ["אבא","אמא","הילדה","סבא","סבתא","האח"].map((n,i)=>({ id:"m"+i, name:n })),
 };
 // Note: no embedded-state loading here -- this version keeps state in Firestore, not in the HTML
 // file itself. See initFirestoreSync() near the bottom, which fetches and merges the real data
@@ -716,12 +785,93 @@ function renderRoute() {
     });
   });
 
-  document.getElementById("flightsList").innerHTML = FLIGHTS.map(f => `
-    <div class="biz-card">
-      <div class="b-top"><span class="b-name">${f.route}</span><span class="b-dates">${f.date}</span></div>
-      <div class="b-detail">${f.note}</div>
+  renderFlights();
+}
+
+function renderFlights() {
+  const wrap = document.getElementById("flightsList");
+  if (!state.flights.length) {
+    wrap.innerHTML = `<p class="empty-hint">אין טיסות רשומות — הוסיפו למטה.</p>`;
+    return;
+  }
+  wrap.innerHTML = state.flights.map(f => `
+    <div class="biz-card" data-flight-card="${f.id}">
+      <div data-flight-view>
+        <div class="b-top">
+          <span class="b-name">${escapeHtml(f.route)}</span>
+          <button class="edit-toggle" data-flight-edit="${f.id}">ערוך ✎</button>
+        </div>
+        <div class="flight-meta">
+          ${f.date ? `<span class="flight-chip">📅 ${escapeHtml(f.date)}</span>` : ''}
+          ${f.time ? `<span class="flight-chip">🕐 ${escapeHtml(f.time)}</span>` : ''}
+          ${f.flightNo ? `<span class="flight-chip">✈️ ${escapeHtml(f.flightNo)}</span>` : ''}
+        </div>
+        ${f.note ? `<div class="b-detail">${escapeHtml(f.note)}</div>` : ''}
+      </div>
+      <div data-flight-form style="display:none;">
+        <div class="field-row"><label>מסלול</label><input type="text" data-ff="route" value="${escapeAttr(f.route)}"></div>
+        <div class="field-row"><label>תאריך</label><input type="text" data-ff="date" value="${escapeAttr(f.date)}" placeholder="לדוגמה: 27.9"></div>
+        <div class="field-row"><label>שעות (המראה / נחיתה)</label><input type="text" data-ff="time" value="${escapeAttr(f.time)}" placeholder="לדוגמה: 23:40 → 05:15"></div>
+        <div class="field-row"><label>מספר טיסה / חברה</label><input type="text" data-ff="flightNo" value="${escapeAttr(f.flightNo)}" placeholder="לדוגמה: LY001"></div>
+        <div class="field-row"><label>הערות</label><textarea data-ff="note">${escapeHtml(f.note)}</textarea></div>
+        <div style="display:flex;justify-content:space-between;gap:8px;">
+          <button class="btn-primary" data-flight-save="${f.id}">שמור וסגור</button>
+          <button class="btn-quiet" data-flight-del="${f.id}" style="color:var(--danger);">מחק טיסה</button>
+        </div>
+      </div>
     </div>
   `).join("");
+
+  wrap.querySelectorAll("[data-flight-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest("[data-flight-card]");
+      card.querySelector("[data-flight-view]").style.display = "none";
+      card.querySelector("[data-flight-form]").style.display = "block";
+    });
+  });
+  wrap.querySelectorAll("[data-flight-save]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest("[data-flight-card]");
+      const f = state.flights.find(x => x.id === btn.dataset.flightSave);
+      if (f) card.querySelectorAll("[data-ff]").forEach(inp => { f[inp.dataset.ff] = inp.value.trim(); });
+      markDirty();
+      renderFlights();
+    });
+  });
+  wrap.querySelectorAll("[data-flight-del]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!confirm("למחוק את הטיסה?")) return;
+      state.flights = state.flights.filter(x => x.id !== btn.dataset.flightDel);
+      markDirty();
+      renderFlights();
+    });
+  });
+}
+
+function wireFlightAdd() {
+  const input = document.getElementById("flightAddInput");
+  function add() {
+    const route = input.value.trim();
+    if (!route) return;
+    state.flights.push({ id: nextId("fl"), date:"", route, flightNo:"", time:"", note:"" });
+    input.value = "";
+    markDirty();
+    renderFlights();
+    // open the new flight straight in edit mode so date/time can be filled in
+    const cards = document.querySelectorAll("#flightsList [data-flight-edit]");
+    if (cards.length) cards[cards.length - 1].click();
+  }
+  document.getElementById("flightAddBtn").addEventListener("click", add);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); add(); } });
+}
+
+// Text typed by users gets inserted into HTML templates -- escape it so characters like < or "
+// can't break the layout (or inject markup).
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/"/g,"&quot;");
 }
 
 /* =========================================================
@@ -1232,6 +1382,292 @@ async function initFirestoreSync(){
 }
 
 /* =========================================================
+   DOCUMENTS (protected: Google sign-in + family email allowlist in Firestore rules)
+   Files are stored in Firestore itself (free plan), split into chunks because a single
+   Firestore document is limited to ~1MB. Photos are compressed before upload.
+   ========================================================= */
+const CHUNK_CHARS = 700000;             // base64 chars per chunk doc, well under the 1MB doc limit
+const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB per file after compression
+let currentUser = null;
+let filesMeta = [];                      // metadata docs only; chunk contents load on demand
+let filesUnsub = null;
+let docsError = "";
+let editingMemberId = null;
+
+function fileIcon(type) {
+  if ((type || "").startsWith("image/")) return "🖼️";
+  if (type === "application/pdf") return "📄";
+  return "📎";
+}
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024*1024) return Math.round(bytes/1024) + " KB";
+  return (bytes/1024/1024).toFixed(1) + " MB";
+}
+function fmtDate(ms) {
+  const d = new Date(ms);
+  return d.getDate() + "." + (d.getMonth()+1) + "." + d.getFullYear();
+}
+
+function renderDocsAuth() {
+  const authEl = document.getElementById("docsAuth");
+  const content = document.getElementById("docsContent");
+  if (!currentUser) {
+    content.style.display = "none";
+    authEl.innerHTML = `
+      <div class="auth-box">
+        <p>כדי לראות ולהעלות מסמכים צריך להתחבר עם חשבון Google של אחד מבני המשפחה.</p>
+        <button class="btn-primary" id="signInBtn">התחברות עם Google</button>
+        ${docsError ? `<div class="docs-error" style="margin-top:12px;margin-bottom:0;">${escapeHtml(docsError)}</div>` : ''}
+      </div>`;
+    document.getElementById("signInBtn").addEventListener("click", async () => {
+      docsError = "";
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) {
+        console.warn("sign-in failed", e);
+        if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") {
+          docsError = "ההתחברות נכשלה (" + (e.code || "שגיאה") + "). נסו שוב.";
+          renderDocsAuth();
+        }
+      }
+    });
+    return;
+  }
+  authEl.innerHTML = `
+    <div class="auth-user">
+      <span>מחובר/ת בתור ${escapeHtml(currentUser.email || "")}</span>
+      <button class="btn-quiet" id="signOutBtn">התנתקות</button>
+    </div>
+    ${docsError ? `<div class="docs-error">${escapeHtml(docsError)}</div>` : ''}`;
+  document.getElementById("signOutBtn").addEventListener("click", () => signOut(auth));
+  content.style.display = docsError ? "none" : "block";
+}
+
+function renderMembers() {
+  const wrap = document.getElementById("docsMembers");
+  wrap.innerHTML = state.members.map(m => {
+    const files = filesMeta.filter(f => f.memberId === m.id).sort((a,b) => b.createdAt - a.createdAt);
+    const isEditing = editingMemberId === m.id;
+    return `
+    <div class="member-card" data-member="${m.id}">
+      <div class="member-head">
+        ${isEditing
+          ? `<input type="text" data-member-name-input value="${escapeAttr(m.name)}">
+             <button class="btn-quiet" data-member-rename="${m.id}">שמור</button>
+             <button class="btn-quiet" data-member-del="${m.id}" style="color:var(--danger);">מחק</button>`
+          : `<span class="m-name">${escapeHtml(m.name)}</span>
+             <button class="btn-quiet" data-member-edit="${m.id}">ערוך ✎</button>`}
+      </div>
+      ${files.length ? files.map(f => `
+        <div class="file-row">
+          <span class="f-icon">${fileIcon(f.type)}</span>
+          <div class="f-main" data-file-open="${f.id}">
+            <div class="f-name">${escapeHtml(f.name)}</div>
+            <div class="f-meta">${fmtSize(f.size)} · הועלה ${fmtDate(f.createdAt)}${f.uploadedBy ? " · " + escapeHtml(f.uploadedBy) : ""}</div>
+          </div>
+          <button class="f-del" data-file-del="${f.id}" aria-label="מחק קובץ">×</button>
+        </div>`).join("") : `<div class="f-meta" style="font-size:13px;color:var(--ink-soft);">אין מסמכים עדיין.</div>`}
+      <label class="upload-label">
+        ⬆️ העלאת קובץ
+        <input type="file" data-upload-for="${m.id}" accept="image/*,application/pdf,.doc,.docx" multiple>
+      </label>
+      <div class="upload-status" data-upload-status="${m.id}"></div>
+    </div>`;
+  }).join("");
+
+  wrap.querySelectorAll("[data-member-edit]").forEach(b => b.addEventListener("click", () => {
+    editingMemberId = b.dataset.memberEdit; renderMembers();
+  }));
+  wrap.querySelectorAll("[data-member-rename]").forEach(b => b.addEventListener("click", () => {
+    const card = b.closest("[data-member]");
+    const name = card.querySelector("[data-member-name-input]").value.trim();
+    const m = state.members.find(x => x.id === b.dataset.memberRename);
+    if (m && name) { m.name = name; markDirty(); }
+    editingMemberId = null; renderMembers();
+  }));
+  wrap.querySelectorAll("[data-member-del]").forEach(b => b.addEventListener("click", () => {
+    const id = b.dataset.memberDel;
+    if (filesMeta.some(f => f.memberId === id)) {
+      alert("יש מסמכים ששייכים לבן/בת המשפחה הזה. מחקו אותם קודם.");
+      return;
+    }
+    if (!confirm("למחוק את בן/בת המשפחה מהרשימה?")) return;
+    state.members = state.members.filter(x => x.id !== id);
+    editingMemberId = null; markDirty(); renderMembers();
+  }));
+  wrap.querySelectorAll("[data-upload-for]").forEach(inp => inp.addEventListener("change", async () => {
+    const memberId = inp.dataset.uploadFor;
+    const statusEl = wrap.querySelector(`[data-upload-status="${memberId}"]`);
+    const files = [...inp.files];
+    inp.value = "";
+    for (const file of files) {
+      try {
+        await uploadFile(memberId, file, (msg) => { statusEl.textContent = msg; });
+      } catch (e) {
+        console.warn("upload failed", e);
+        statusEl.textContent = e.userMessage || ("ההעלאה של " + file.name + " נכשלה. נסו שוב.");
+        return;
+      }
+    }
+    statusEl.textContent = files.length ? "הועלה בהצלחה ✓" : "";
+  }));
+  wrap.querySelectorAll("[data-file-open]").forEach(el => el.addEventListener("click", () => openFile(el.dataset.fileOpen)));
+  wrap.querySelectorAll("[data-file-del]").forEach(b => b.addEventListener("click", () => deleteFile(b.dataset.fileDel)));
+}
+
+function readAsDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+
+// Shrinks large phone photos (often 3-6MB) to ~2000px JPEG -- still sharp enough to read a passport.
+async function compressImageIfNeeded(file) {
+  if (!file.type.startsWith("image/") || file.size < 600 * 1024 || file.type === "image/gif") return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const maxSide = 2000;
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
+    if (!blob || blob.size >= file.size) return file;
+    const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], newName, { type: "image/jpeg" });
+  } catch (e) {
+    return file; // e.g. a format the browser can't decode -- upload as-is
+  }
+}
+
+async function uploadFile(memberId, original, onStatus) {
+  onStatus("מכין את " + original.name + "…");
+  const file = await compressImageIfNeeded(original);
+  if (file.size > MAX_FILE_BYTES) {
+    const err = new Error("too big");
+    err.userMessage = "הקובץ " + original.name + " גדול מדי (" + fmtSize(file.size) + "). המקסימום הוא 10MB.";
+    throw err;
+  }
+  const dataUrl = await readAsDataUrl(file);
+  const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  const chunkCount = Math.ceil(base64.length / CHUNK_CHARS);
+  const fileId = nextId("f");
+  for (let i = 0; i < chunkCount; i++) {
+    onStatus("מעלה את " + file.name + "… " + Math.round((i / chunkCount) * 100) + "%");
+    await setDoc(doc(db, "memberFiles", fileId, "chunks", String(i)), {
+      data: base64.slice(i * CHUNK_CHARS, (i + 1) * CHUNK_CHARS)
+    });
+  }
+  // Metadata is written last, so a half-finished upload never shows up in the list.
+  await setDoc(doc(db, "memberFiles", fileId), {
+    memberId, name: file.name, type: file.type || "application/octet-stream",
+    size: file.size, chunkCount, createdAt: Date.now(),
+    uploadedBy: (currentUser && (currentUser.displayName || currentUser.email)) || ""
+  });
+}
+
+async function loadFileBlob(meta) {
+  const parts = [];
+  for (let i = 0; i < meta.chunkCount; i++) {
+    const snap = await getDoc(doc(db, "memberFiles", meta.id, "chunks", String(i)));
+    if (!snap.exists()) throw new Error("missing chunk " + i);
+    parts.push(snap.data().data);
+  }
+  const bin = atob(parts.join(""));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: meta.type });
+}
+
+async function openFile(fileId) {
+  const meta = filesMeta.find(f => f.id === fileId);
+  if (!meta) return;
+  const statusEl = document.querySelector(`[data-upload-status="${meta.memberId}"]`);
+  if (statusEl) statusEl.textContent = "פותח את " + meta.name + "…";
+  try {
+    const blob = await loadFileBlob(meta);
+    const url = URL.createObjectURL(blob);
+    if (meta.type.startsWith("image/")) {
+      document.getElementById("imgViewerImg").src = url;
+      const dl = document.getElementById("imgViewerDownload");
+      dl.href = url; dl.download = meta.name;
+      document.getElementById("imgViewer").hidden = false;
+    } else {
+      // PDFs and other files: hand them to the phone to open in its own viewer.
+      const a = document.createElement("a");
+      a.href = url; a.download = meta.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+    if (statusEl) statusEl.textContent = "";
+  } catch (e) {
+    console.warn("open failed", e);
+    if (statusEl) statusEl.textContent = "לא הצלחנו לפתוח את הקובץ. נסו שוב.";
+  }
+}
+
+async function deleteFile(fileId) {
+  const meta = filesMeta.find(f => f.id === fileId);
+  if (!meta || !confirm("למחוק את " + meta.name + "?")) return;
+  try {
+    const chunkSnaps = await getDocs(collection(db, "memberFiles", fileId, "chunks"));
+    for (const s of chunkSnaps.docs) await deleteDoc(s.ref);
+    await deleteDoc(doc(db, "memberFiles", fileId));
+  } catch (e) {
+    console.warn("delete failed", e);
+    alert("המחיקה נכשלה. נסו שוב.");
+  }
+}
+
+function closeImgViewer() {
+  const img = document.getElementById("imgViewerImg");
+  if (img.src) URL.revokeObjectURL(img.src);
+  img.removeAttribute("src");
+  document.getElementById("imgViewer").hidden = true;
+}
+
+function initDocs() {
+  document.getElementById("imgViewerClose").addEventListener("click", closeImgViewer);
+  document.getElementById("memberAddBtn").addEventListener("click", () => {
+    const input = document.getElementById("memberAddInput");
+    const name = input.value.trim();
+    if (!name) return;
+    state.members.push({ id: nextId("m"), name });
+    input.value = "";
+    markDirty();
+    renderMembers();
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (filesUnsub) { filesUnsub(); filesUnsub = null; }
+    filesMeta = [];
+    docsError = "";
+    if (user) {
+      filesUnsub = onSnapshot(filesColRef, (snap) => {
+        docsError = "";
+        filesMeta = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        renderDocsAuth();
+        renderMembers();
+      }, (err) => {
+        console.warn("files listen error", err);
+        docsError = err.code === "permission-denied"
+          ? "החשבון " + (user.email || "") + " לא נמצא ברשימת החשבונות המורשים. התחברו עם חשבון אחר, או הוסיפו את הכתובת לכללי האבטחה ב-Firebase."
+          : "לא ניתן לטעון את המסמכים כרגע.";
+        renderDocsAuth();
+      });
+    }
+    renderDocsAuth();
+    renderMembers();
+  });
+}
+
+/* =========================================================
    INIT
    ========================================================= */
 function renderAll(){
@@ -1244,12 +1680,15 @@ function renderAll(){
   renderPacking();
   renderExpenses();
   renderNotes();
+  renderMembers();
 }
 
 // Listeners that don't depend on loaded data can attach immediately.
 wireAddRow("todoInput", "todoAddBtn", "todos", "td", renderTodo, "todoDateInput");
 wireAddRow("packInput", "packAddBtn", "packing", "pk", renderPacking);
 wireExpenses();
+wireFlightAdd();
+initDocs();
 
 // Data-dependent rendering waits for the initial Firestore fetch (see initFirestoreSync).
 initFirestoreSync();
